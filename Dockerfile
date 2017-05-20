@@ -1,3 +1,3 @@
-from golang:1.6
+from golang:1.8
 
 # TODO - install godeps
