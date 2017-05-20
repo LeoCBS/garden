@@ -15,7 +15,7 @@ Receive garden information from arduino sensors
                 "name": "humidity",
                 "value": "80",
                 "measure": "percent",
-                "created": "2015-08-05T08:40:51.620Z"
+                "lastUpdate": "2015-08-05T08:40:51.620Z"
             }
         ]
         
