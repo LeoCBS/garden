@@ -13,7 +13,7 @@ type mock struct {
 	location string
 }
 
-func (m *mock) Store(rawJson io.ReadCloser) string {
+func (m *mock) Store(body io.ReadCloser) string {
 	return m.location
 }
 
