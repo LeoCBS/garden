@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,7 @@ type mock struct {
 	location string
 }
 
-func (m *mock) Store() string {
+func (m *mock) Store(rawJson io.ReadCloser) string {
 	return m.location
 }
 

@@ -11,7 +11,7 @@ const (
 )
 
 type Storer interface {
-	Store() string
+	Store(io.ReadCloser) string
 }
 
 type Server struct {
@@ -20,7 +20,7 @@ type Server struct {
 }
 
 func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
-	location := s.st.Store()
+	location := s.st.Store(r.Body)
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusCreated)
 	io.WriteString(w, `{"alive": true}`)
