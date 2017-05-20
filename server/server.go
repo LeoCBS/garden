@@ -1,39 +1,37 @@
 package server
 
-import "fmt"
+import (
+	"io"
+	"net/http"
+)
 
-type Calculator struct {
-	Memory int
+const (
+	v1            = "/garden/v1"
+	parameterPath = "/parameter"
+)
+
+type Storer interface {
+	Store() string
 }
 
-func (calculator *Calculator) Sum(value int) {
-	fmt.Println("memory pointer: %s", &calculator.Memory)
-	calculator.Memory = calculator.Memory + 100
+type Server struct {
+	ServeMux *http.ServeMux
+	st       Storer
 }
 
-func (calculator *Calculator) GetMemory() int {
-	fmt.Println("memory pointer: %s", &calculator.Memory)
-	return calculator.Memory
+func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
+	location := s.st.Store()
+	w.Header().Set("Location", location)
+	w.WriteHeader(http.StatusCreated)
+	io.WriteString(w, `{"alive": true}`)
 }
 
-func NewCalculatorPointer(initValue int) *Calculator {
-	return &Calculator{
-		Memory: initValue,
+func NewServer(str Storer) *Server {
+	sm := http.NewServeMux()
+	s := &Server{
+		ServeMux: sm,
+		st:       str,
 	}
-}
-
-func NewCalculatorValue(initValue int) Calculator {
-	return Calculator{
-		Memory: initValue,
-	}
-}
-
-func (calculator Calculator) SumNoPointer(value int) {
-	fmt.Println("memory pointer: %s", &calculator.Memory)
-	calculator.Memory = calculator.Memory + 100
-}
-
-func (calculator Calculator) GetMemoryNoPointer() int {
-	fmt.Println("memory pointer: %s", &calculator.Memory)
-	return calculator.Memory
+	sm.HandleFunc(v1+parameterPath, s.postParameterHandler)
+	return s
 }
