@@ -1,28 +1,42 @@
 package server_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
-    "fmt"
 
-    "github.com/LeoCBS/garden/pointers"
+	"github.com/LeoCBS/garden/server"
 )
 
-func TestSumPointer(t *testing.T) {
-	calculator := pointers.NewCalculatorPointer(100)
-    calculator.Sum(100)
-    value := calculator.GetMemory()
-    fmt.Printf("value " , value)
-    if value != 200{
-        t.Fatal("calculator don't sum value")
-    }
+type mock struct {
+	location string
 }
 
-func TestSumPerValue(t *testing.T) {
-	calculator := pointers.NewCalculatorValue(100)
-    calculator.SumNoPointer(100)
-    value := calculator.GetMemoryNoPointer()
-    fmt.Printf("value " , value)
-    if value != 100{
-        t.Fatal("calculator sum value")
-    }
+func (m *mock) Store() string {
+	return m.location
+}
+
+func TestPostParameterHandler(t *testing.T) {
+	req, err := http.NewRequest("POST", "/garden/v1/parameter", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	expectedLocation := "stored"
+	s := server.NewServer(&mock{
+		location: expectedLocation,
+	})
+	s.ServeMux.ServeHTTP(rr, req)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusCreated {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusCreated)
+	}
+	resp := rr.Result()
+	location := resp.Header.Get("Location")
+	if location != expectedLocation {
+		t.Error("server don't return expected location")
+	}
 }
