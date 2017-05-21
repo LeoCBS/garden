@@ -6,7 +6,13 @@ import (
 	"io"
 )
 
-type Parameter struct{}
+type Storer interface {
+	Store(interface{}) error
+}
+
+type Parameter struct {
+	s Storer
+}
 
 type ParameterJson struct {
 	Name    string  `json:"name"`
@@ -14,12 +20,16 @@ type ParameterJson struct {
 	Measure string  `json:"measure"`
 }
 
-func (s *Parameter) Store(body io.ReadCloser) (string, error) {
-	param, err := decodeJson(body)
+func (param *Parameter) Put(body io.ReadCloser) (string, error) {
+	paramJson, err := decodeJson(body)
 	if err != nil {
 		return "", err
 	}
-	err = validateParameterFields(param)
+	err = validateParameterFields(paramJson)
+	if err != nil {
+		return "", err
+	}
+	err = param.s.Store(paramJson)
 	if err != nil {
 		return "", err
 	}
@@ -47,6 +57,8 @@ func decodeJson(body io.ReadCloser) (ParameterJson, error) {
 	return param, err
 }
 
-func NewParameter() *Parameter {
-	return &Parameter{}
+func NewParameter(storer Storer) *Parameter {
+	return &Parameter{
+		s: storer,
+	}
 }
