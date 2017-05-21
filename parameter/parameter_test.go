@@ -2,6 +2,7 @@ package parameter_test
 
 import (
 	"bytes"
+	"errors"
 	"github.com/LeoCBS/garden/parameter"
 	"io"
 	"io/ioutil"
@@ -9,14 +10,21 @@ import (
 	"testing"
 )
 
-//TODO test body close
+type fixture struct {
+	rc    *readCloser
+	param *parameter.Parameter
+}
 
 type readCloser struct {
-	isClosed bool
-	reader   io.Reader
+	isClosed    bool
+	isReadError bool
+	reader      io.Reader
 }
 
 func (rc *readCloser) Read(p []byte) (int, error) {
+	if rc.isReadError {
+		return 0, errors.New("Read throws error")
+	}
 	return rc.reader.Read(p)
 }
 
@@ -25,10 +33,30 @@ func (rc *readCloser) Close() error {
 	return nil
 }
 
-func setUp(rawJson string) *readCloser {
-	return &readCloser{
-		isClosed: false,
-		reader:   strings.NewReader(rawJson),
+type storerMock struct {
+	isError bool
+}
+
+func (m *storerMock) Store(interface{}) error {
+	if m.isError {
+		return errors.New("Store exploded")
+	}
+	return nil
+}
+
+func setUp(isReadError bool, isStoreError bool) *fixture {
+	validJson := `{"name": "humidity", "value":1.0, "measure":"percent"}`
+	rc := &readCloser{
+		isClosed:    false,
+		isReadError: isReadError,
+		reader:      strings.NewReader(validJson),
+	}
+	param := parameter.NewParameter(&storerMock{
+		isError: isStoreError,
+	})
+	return &fixture{
+		rc:    rc,
+		param: param,
 	}
 }
 
@@ -40,20 +68,66 @@ func TestParameterFieldsInvalids(t *testing.T) {
 			bytes.NewReader([]byte(`{"name":"test", "value":0.0}`))),
 	}
 	for test, value := range testcases {
-		param := parameter.NewParameter()
-		_, err := param.Store(value)
+		param := parameter.NewParameter(&storerMock{})
+		_, err := param.Put(value)
 		if err == nil {
 			t.Errorf("don't validate field correctly in test case %s", test)
 		}
 	}
 }
 
-func TestParameterFieldValid(t *testing.T) {
-	rc := setUp(`{"name": "humidity", "value":1.0, "measure":"percent"}`)
-	param := parameter.NewParameter()
-	_, err := param.Store(rc)
+func TestNewParameterFieldValid(t *testing.T) {
+	isReadError := false
+	isStoreError := false
+	f := setUp(isReadError, isStoreError)
+	_, err := f.param.Put(f.rc)
 	if err != nil {
 		t.Error("Store return error with valid ReadCloser")
 	}
+}
 
+func TestShouldCatchReadError(t *testing.T) {
+	isReadError := true
+	isStoreError := false
+	f := setUp(isReadError, isStoreError)
+	_, err := f.param.Put(f.rc)
+	if err == nil {
+		t.Error("Read don't return error as expected")
+	}
+}
+
+func TestShouldReadCloseWithSuccess(t *testing.T) {
+	isReadError := false
+	isStoreError := false
+	f := setUp(isReadError, isStoreError)
+	_, err := f.param.Put(f.rc)
+	if err != nil {
+		t.Error("Store return error with valid ReadCloser")
+	}
+	if !f.rc.isClosed {
+		t.Error("Store don't call Close func, possible leak memory")
+	}
+}
+
+func TestShouldGetErrorOnStore(t *testing.T) {
+	isReadError := false
+	isStoreError := true
+	f := setUp(isReadError, isStoreError)
+	_, err := f.param.Put(f.rc)
+	if err == nil {
+		t.Error("Store() don't return error as expected")
+	}
+}
+
+func TestShouldReadCloseAndStoreWithSuccess(t *testing.T) {
+	isReadError := false
+	isStoreError := false
+	f := setUp(isReadError, isStoreError)
+	_, err := f.param.Put(f.rc)
+	if !f.rc.isClosed {
+		t.Error("Store don't call Close func, possible leak memory")
+	}
+	if err != nil {
+		t.Error("Store() don't return error as expected")
+	}
 }
