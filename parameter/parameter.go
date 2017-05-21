@@ -1,16 +1,17 @@
-package server
+package parameter
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 )
 
 type Parameter struct{}
 
 type ParameterJson struct {
-	Name    string `json:"name"`
-	Value   float  `json:"value"`
-	Measure string `json:"measure"`
+	Name    string  `json:"name"`
+	Value   float32 `json:"value"`
+	Measure string  `json:"measure"`
 }
 
 func (s *Parameter) Store(body io.ReadCloser) (string, error) {
@@ -22,14 +23,12 @@ func (s *Parameter) Store(body io.ReadCloser) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	return "", err
 }
 
-func validateParameterFields(param Parameter) error {
+func validateParameterFields(param ParameterJson) error {
 	if param.Name == "" {
 		return errors.New("field name is required")
-	}
-	if param.Value == "" {
-		return errors.New("field value is required")
 	}
 	if param.Measure == "" {
 		return errors.New("field measure is required")
@@ -42,10 +41,10 @@ func decodeJson(body io.ReadCloser) (ParameterJson, error) {
 	var param ParameterJson
 	err := d.Decode(&param)
 	if err != nil {
-		return "", err
+		return ParameterJson{}, err
 	}
 	defer body.Close()
-	return param
+	return param, err
 }
 
 func NewParameter() *Parameter {
