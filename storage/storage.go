@@ -1,16 +1,15 @@
 package storage
 
 import (
-	"errors"
 	"gopkg.in/mgo.v2"
 )
 
-type storer struct {
+type storage struct {
 	c *mgo.Collection
 }
 
-func (storer *storer) Store(data interface{}) error {
-	return storer.c.Insert(data)
+func (s *storage) Store(data interface{}) error {
+	return s.c.Insert(data)
 }
 
 func NewStorage(
@@ -19,8 +18,11 @@ func NewStorage(
 	colletion string,
 ) (*storage, error) {
 	session, err := mgo.Dial(addr)
-	collection := session.DB(database).C(colletion)
-	return &storer{
-		c: colletion,
+	if err != nil {
+		return &storage{}, err
 	}
+	c := session.DB(database).C(colletion)
+	return &storage{
+		c: c,
+	}, nil
 }
