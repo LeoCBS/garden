@@ -13,8 +13,9 @@ type mock struct {
 	location string
 }
 
-func (m *mock) Put(body io.ReadCloser) string {
-	return m.location
+//TODO test if put return error
+func (m *mock) Put(body io.ReadCloser) (string, error) {
+	return m.location, nil
 }
 
 func TestPostParameterHandler(t *testing.T) {

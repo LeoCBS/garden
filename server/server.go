@@ -11,7 +11,7 @@ const (
 )
 
 type Parameter interface {
-	Put(io.ReadCloser) string
+	Put(io.ReadCloser) (string, error)
 }
 
 type Server struct {
@@ -20,7 +20,7 @@ type Server struct {
 }
 
 func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
-	location := s.param.Put(r.Body)
+	location, _ := s.param.Put(r.Body)
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusCreated)
 	io.WriteString(w, `{"alive": true}`)
