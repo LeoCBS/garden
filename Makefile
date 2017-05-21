@@ -1,4 +1,4 @@
-BASE_BUILD_IMG = go-scratchpad
+BASE_BUILD_IMG = garden
 GO_DIR=/go/src/github.com/LeoCBS/garden
 RUN_GO=docker run -v `pwd`:$(GO_DIR) -w $(GO_DIR) $(BASE_BUILD_IMG) 
 
