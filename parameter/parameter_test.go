@@ -5,6 +5,7 @@ import (
 	"github.com/LeoCBS/garden/parameter"
 	"io"
 	"io/ioutil"
+	"strings"
 	"testing"
 )
 
@@ -12,7 +13,11 @@ import (
 
 type readCloser struct {
 	isClosed bool
-	io.Reader
+	reader   io.Reader
+}
+
+func (rc *readCloser) Read(p []byte) (int, error) {
+	return rc.reader.Read(p)
 }
 
 func (rc *readCloser) Close() error {
@@ -22,8 +27,8 @@ func (rc *readCloser) Close() error {
 
 func setUp(rawJson string) *readCloser {
 	return &readCloser{
-		isClosed:  false,
-		io.Reader: string.NewReader(rawJson),
+		isClosed: false,
+		reader:   strings.NewReader(rawJson),
 	}
 }
 
@@ -44,4 +49,11 @@ func TestParameterFieldsInvalids(t *testing.T) {
 }
 
 func TestParameterFieldValid(t *testing.T) {
+	rc := setUp(`{"name": "humidity", "value":1.0, "measure":"percent"}`)
+	param := parameter.NewParameter()
+	_, err := param.Store(rc)
+	if err != nil {
+		t.Error("Store return error with valid ReadCloser")
+	}
+
 }
