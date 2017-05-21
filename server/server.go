@@ -10,27 +10,27 @@ const (
 	parameterPath = "/parameter"
 )
 
-type Storer interface {
-	Store(io.ReadCloser) string
+type Parameter interface {
+	Put(io.ReadCloser) string
 }
 
 type Server struct {
 	ServeMux *http.ServeMux
-	st       Storer
+	param    Parameter
 }
 
 func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
-	location := s.st.Store(r.Body)
+	location := s.param.Put(r.Body)
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusCreated)
 	io.WriteString(w, `{"alive": true}`)
 }
 
-func NewServer(str Storer) *Server {
+func NewServer(p Parameter) *Server {
 	sm := http.NewServeMux()
 	s := &Server{
 		ServeMux: sm,
-		st:       str,
+		param:    p,
 	}
 	sm.HandleFunc(v1+parameterPath, s.postParameterHandler)
 	return s
