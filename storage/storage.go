@@ -10,7 +10,7 @@ type storer struct {
 }
 
 func (storer *storer) Store(data interface{}) error {
-	return storer.c.Insert(&Book{"Ale1", "Book1", 35})
+	return storer.c.Insert(data)
 }
 
 func NewStorage(
