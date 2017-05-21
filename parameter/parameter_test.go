@@ -3,11 +3,12 @@ package parameter_test
 import (
 	"bytes"
 	"errors"
-	"github.com/LeoCBS/garden/parameter"
 	"io"
 	"io/ioutil"
 	"strings"
 	"testing"
+
+	"github.com/LeoCBS/garden/parameter"
 )
 
 type fixture struct {
