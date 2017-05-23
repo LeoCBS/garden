@@ -20,7 +20,7 @@ type ParameterJson struct {
 	Measure string  `json:"measure"`
 }
 
-func (param *Parameter) Put(body io.ReadCloser) (string, error) {
+func (param *Parameter) Post(body io.ReadCloser) (string, error) {
 	paramJson, err := decodeJson(body)
 	if err != nil {
 		return "", err
