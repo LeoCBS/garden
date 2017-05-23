@@ -14,7 +14,7 @@ type mock struct {
 }
 
 //TODO test if put return error
-func (m *mock) Put(body io.ReadCloser) (string, error) {
+func (m *mock) Post(body io.ReadCloser) (string, error) {
 	return m.location, nil
 }
 
