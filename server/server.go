@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -19,11 +20,19 @@ type Server struct {
 	param    Parameter
 }
 
+// TODO implements handler erros (501,  404)
+
 func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
-	location, _ := s.param.Put(r.Body)
+	location, err := s.param.Put(r.Body)
+	if err != nil {
+		errMsg := fmt.Sprintf("Internal error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		io.WriteString(w, errMsg)
+		return
+	}
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusCreated)
-	io.WriteString(w, `{"alive": true}`)
+	io.WriteString(w, `created`)
 }
 
 func NewServer(p Parameter) *Server {
