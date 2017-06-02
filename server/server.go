@@ -12,7 +12,7 @@ const (
 )
 
 type Parameter interface {
-	Put(io.ReadCloser) (string, error)
+	Post(io.ReadCloser) (string, error)
 }
 
 type Server struct {
@@ -30,6 +30,7 @@ func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, errMsg)
 		return
 	}
+
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusCreated)
 	io.WriteString(w, `created`)
