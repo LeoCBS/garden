@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"time"
 )
 
 type Storer interface {
@@ -15,9 +16,10 @@ type Parameter struct {
 }
 
 type ParameterJson struct {
-	Name    string  `json:"name"`
-	Value   float32 `json:"value"`
-	Measure string  `json:"measure"`
+	Name      string  `json:"name"`
+	Value     float32 `json:"value"`
+	Measure   string  `json:"measure"`
+	CreatedAt string
 }
 
 func (param *Parameter) Post(body io.ReadCloser) (string, error) {
@@ -29,6 +31,7 @@ func (param *Parameter) Post(body io.ReadCloser) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	paramJson.CreatedAt = time.Now().String()
 	err = param.s.Store(paramJson)
 	if err != nil {
 		return "", err
