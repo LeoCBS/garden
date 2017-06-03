@@ -12,7 +12,7 @@ const (
 )
 
 type Parameter interface {
-	Post(io.ReadCloser) (string, error)
+	Put(io.ReadCloser) (string, error)
 }
 
 type Server struct {

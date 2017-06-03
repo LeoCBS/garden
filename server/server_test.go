@@ -19,6 +19,7 @@ func (m *mock) Put(body io.ReadCloser) (string, error) {
 	if m.err {
 		return "", errors.New("Put returned error")
 	}
+	return m.location, nil
 }
 
 func TestPutParameterSuccess(t *testing.T) {
