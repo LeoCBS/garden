@@ -8,6 +8,9 @@ base-build:
 build: base-build
 	$(RUN_GO) go build
 
+build-arm: base-build
+	$(RUN_GO) env GOOS=android GOARCH=arm go build
+
 run: build
 	./main
 
