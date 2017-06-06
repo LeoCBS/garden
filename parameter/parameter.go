@@ -22,7 +22,7 @@ type ParameterJson struct {
 	CreatedAt string
 }
 
-func (param *Parameter) Put(body io.ReadCloser) (string, error) {
+func (param *Parameter) Save(body io.ReadCloser) (string, error) {
 	paramJson, err := decodeJson(body)
 	if err != nil {
 		return "", err
@@ -37,6 +37,10 @@ func (param *Parameter) Put(body io.ReadCloser) (string, error) {
 		return "", err
 	}
 	return "", err
+}
+
+func (param *Parameter) List() ([]byte, error) {
+	return nil, nil
 }
 
 func validateParameterFields(param ParameterJson) error {

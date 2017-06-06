@@ -70,7 +70,7 @@ func TestParameterFieldsInvalids(t *testing.T) {
 	}
 	for test, value := range testcases {
 		param := parameter.NewParameter(&storerMock{})
-		_, err := param.Put(value)
+		_, err := param.Save(value)
 		if err == nil {
 			t.Errorf("don't validate field correctly in test case %s", test)
 		}
@@ -81,7 +81,7 @@ func TestNewParameterFieldValid(t *testing.T) {
 	isReadError := false
 	isStoreError := false
 	f := setUp(isReadError, isStoreError)
-	_, err := f.param.Put(f.rc)
+	_, err := f.param.Save(f.rc)
 	if err != nil {
 		t.Error("Store return error with valid ReadCloser")
 	}
@@ -91,7 +91,7 @@ func TestShouldCatchReadError(t *testing.T) {
 	isReadError := true
 	isStoreError := false
 	f := setUp(isReadError, isStoreError)
-	_, err := f.param.Put(f.rc)
+	_, err := f.param.Save(f.rc)
 	if err == nil {
 		t.Error("Read don't return error as expected")
 	}
@@ -101,7 +101,7 @@ func TestShouldReadCloseWithSuccess(t *testing.T) {
 	isReadError := false
 	isStoreError := false
 	f := setUp(isReadError, isStoreError)
-	_, err := f.param.Put(f.rc)
+	_, err := f.param.Save(f.rc)
 	if err != nil {
 		t.Error("Store return error with valid ReadCloser")
 	}
@@ -114,7 +114,7 @@ func TestShouldGetErrorOnStore(t *testing.T) {
 	isReadError := false
 	isStoreError := true
 	f := setUp(isReadError, isStoreError)
-	_, err := f.param.Put(f.rc)
+	_, err := f.param.Save(f.rc)
 	if err == nil {
 		t.Error("Store() don't return error as expected")
 	}
@@ -124,7 +124,7 @@ func TestShouldReadCloseAndStoreWithSuccess(t *testing.T) {
 	isReadError := false
 	isStoreError := false
 	f := setUp(isReadError, isStoreError)
-	_, err := f.param.Put(f.rc)
+	_, err := f.param.Save(f.rc)
 	if !f.rc.isClosed {
 		t.Error("Store don't call Close func, possible leak memory")
 	}
