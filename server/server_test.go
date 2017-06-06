@@ -23,6 +23,9 @@ func (m *mock) Save(body io.ReadCloser) (string, error) {
 }
 
 func (m *mock) List() ([]byte, error) {
+	if m.err {
+		return nil, errors.New("List exploded!!")
+	}
 	return nil, nil
 }
 
@@ -72,6 +75,14 @@ func TestSaveParameterError(t *testing.T) {
 	}
 }
 
+type fixture struct {
+	req *http.Request
+	rr  *httptest.ResponseRecorder
+}
+
+func setUp() {
+}
+
 func TestListParameterError(t *testing.T) {
 	req, err := http.NewRequest("POST", "/garden/v1/parameter/list", nil)
 	if err != nil {
@@ -79,9 +90,8 @@ func TestListParameterError(t *testing.T) {
 	}
 
 	rr := httptest.NewRecorder()
-	expectedLocation := "stored"
 	s := server.NewServer(&mock{
-		location: expectedLocation,
+		location: "",
 		err:      true,
 	})
 	s.ServeMux.ServeHTTP(rr, req)
