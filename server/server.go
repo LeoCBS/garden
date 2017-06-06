@@ -22,7 +22,7 @@ type Server struct {
 	param    Parameter
 }
 
-// TODO implements handler erros (501,  404)
+// TODO check http method
 
 func (s *Server) listParametersHandler(w http.ResponseWriter, r *http.Request) {
 	parameters, err := s.param.List()
