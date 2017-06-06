@@ -39,7 +39,7 @@ func (param *Parameter) Save(body io.ReadCloser) (string, error) {
 	return "", err
 }
 
-func (param *Parameter) List() ([]byte, error) {
+func (param *Parameter) List() (interface{}, error) {
 	return nil, nil
 }
 
