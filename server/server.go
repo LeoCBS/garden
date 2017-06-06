@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	v1            = "/garden/v1"
-	parameterPath = "/parameter/save"
+	v1                 = "/garden/v1"
+	saveParameterPath  = "/parameter/save"
+	listParametersPath = "/parameter/list"
 )
 
 type Parameter interface {
@@ -40,7 +41,7 @@ func errorHandler(w http.ResponseWriter, err error) {
 	io.WriteString(w, errMsg)
 }
 
-func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) saveParameterHandler(w http.ResponseWriter, r *http.Request) {
 	location, err := s.param.Save(r.Body)
 	if err != nil {
 		errorHandler(w, err)
@@ -58,6 +59,7 @@ func NewServer(p Parameter) *Server {
 		ServeMux: sm,
 		param:    p,
 	}
-	sm.HandleFunc(v1+parameterPath, s.postParameterHandler)
+	sm.HandleFunc(v1+saveParameterPath, s.saveParameterHandler)
+	sm.HandleFunc(v1+listParametersPath, s.listParametersHandler)
 	return s
 }
