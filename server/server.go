@@ -8,11 +8,12 @@ import (
 
 const (
 	v1            = "/garden/v1"
-	parameterPath = "/parameter"
+	parameterPath = "/parameter/save"
 )
 
 type Parameter interface {
-	Put(io.ReadCloser) (string, error)
+	Save(io.ReadCloser) (string, error)
+	List() ([]byte, error)
 }
 
 type Server struct {
@@ -22,12 +23,27 @@ type Server struct {
 
 // TODO implements handler erros (501,  404)
 
-func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
-	location, err := s.param.Put(r.Body)
+func (s *Server) listParametersHandler(w http.ResponseWriter, r *http.Request) {
+	parameters, err := s.param.List()
 	if err != nil {
-		errMsg := fmt.Sprintf("Internal error: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		io.WriteString(w, errMsg)
+		errorHandler(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(parameters)
+}
+
+func errorHandler(w http.ResponseWriter, err error) {
+	errMsg := fmt.Sprintf("Internal error: %s", err)
+	w.WriteHeader(http.StatusInternalServerError)
+	io.WriteString(w, errMsg)
+}
+
+func (s *Server) postParameterHandler(w http.ResponseWriter, r *http.Request) {
+	location, err := s.param.Save(r.Body)
+	if err != nil {
+		errorHandler(w, err)
 		return
 	}
 
