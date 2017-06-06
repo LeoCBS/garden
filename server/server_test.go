@@ -78,13 +78,11 @@ func TestSaveParameterError(t *testing.T) {
 type fixture struct {
 	req *http.Request
 	rr  *httptest.ResponseRecorder
+	s   *server.Server
 }
 
-func setUp() {
-}
-
-func TestListParameterError(t *testing.T) {
-	req, err := http.NewRequest("POST", "/garden/v1/parameter/list", nil)
+func setUp(t *testing.T, httpMethod string, path string) *fixture {
+	req, err := http.NewRequest(httpMethod, path, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,9 +93,18 @@ func TestListParameterError(t *testing.T) {
 		err:      true,
 	})
 	s.ServeMux.ServeHTTP(rr, req)
+	return &fixture{
+		req: req,
+		rr:  rr,
+		s:   s,
+	}
+}
+
+func TestListParameterError(t *testing.T) {
+	f := setUp(t, "POST", "/garden/v1/parameter/list")
 
 	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusInternalServerError {
+	if status := f.rr.Code; status != http.StatusInternalServerError {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusInternalServerError)
 	}
