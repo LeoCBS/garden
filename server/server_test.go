@@ -15,15 +15,19 @@ type mock struct {
 	err      bool
 }
 
-func (m *mock) Put(body io.ReadCloser) (string, error) {
+func (m *mock) Save(body io.ReadCloser) (string, error) {
 	if m.err {
-		return "", errors.New("Put returned error")
+		return "", errors.New("Save returned error")
 	}
 	return m.location, nil
 }
 
-func TestPutParameterSuccess(t *testing.T) {
-	req, err := http.NewRequest("POST", "/garden/v1/parameter", nil)
+func (m *mock) List() ([]byte, error) {
+	return nil, nil
+}
+
+func TestSaveParameterSuccess(t *testing.T) {
+	req, err := http.NewRequest("POST", "/garden/v1/parameter/save", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,8 +51,29 @@ func TestPutParameterSuccess(t *testing.T) {
 	}
 }
 
-func TestPutParameterError(t *testing.T) {
-	req, err := http.NewRequest("POST", "/garden/v1/parameter", nil)
+func TestSaveParameterError(t *testing.T) {
+	req, err := http.NewRequest("POST", "/garden/v1/parameter/save", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	expectedLocation := "stored"
+	s := server.NewServer(&mock{
+		location: expectedLocation,
+		err:      true,
+	})
+	s.ServeMux.ServeHTTP(rr, req)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusInternalServerError)
+	}
+}
+
+func TestListParameterError(t *testing.T) {
+	req, err := http.NewRequest("POST", "/garden/v1/parameter/list", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
