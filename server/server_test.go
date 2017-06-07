@@ -64,6 +64,7 @@ func setUp(
 	}
 }
 
+//TODO test body content
 func TestSaveParameterSuccess(t *testing.T) {
 	expectedLocation := "stored"
 	f := setUp(t, "POST", "/garden/v1/parameter/save", false, ParamJson{}, expectedLocation)
@@ -90,7 +91,7 @@ func TestSaveParameterError(t *testing.T) {
 
 // TODO test invalid http method
 
-func TestListParameterError(t *testing.T) {
+func TestListParametersError(t *testing.T) {
 	f := setUp(t, "GET", "/garden/v1/parameter/list", true, ParamJson{}, "")
 
 	if status := f.rr.Code; status != http.StatusInternalServerError {
@@ -99,7 +100,26 @@ func TestListParameterError(t *testing.T) {
 	}
 }
 
-func TestListParameterSuccess(t *testing.T) {
+func TestListParametersMethodsNotAllowed(t *testing.T) {
+	cases := map[string]string{
+		"POSTTestCase":    "POST",
+		"PUTTestCase":     "PUT",
+		"DELETETestCase":  "DELETE",
+		"HEADTestCase":    "HEAD",
+		"OPTIONSTestCase": "OPTIONS",
+		"TRACETestCase":   "TRACE",
+		"CONNECTTestCase": "CONNECT",
+	}
+	for testCase, method := range cases {
+		f := setUp(t, method, "/garden/v1/parameter/list", false, ParamJson{}, "")
+
+		if status := f.rr.Code; status != http.StatusMethodNotAllowed {
+			t.Errorf("%s: got %v want %v", testCase, status, http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+func TestListParametersSuccess(t *testing.T) {
 	expectedParam := ParamJson{Name: "ok"}
 	f := setUp(t, "GET", "/garden/v1/parameter/list", false, expectedParam, "")
 

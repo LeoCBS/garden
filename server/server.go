@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -30,33 +30,35 @@ type Server struct {
 
 func (s *Server) listParametersHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
+		err := errors.New(http.StatusText(http.StatusMethodNotAllowed))
+		s.errorHandler(w, err, http.StatusMethodNotAllowed)
+		return
 	}
 
 	parameters, err := s.param.List()
 	if err != nil {
-		s.errorHandler(w, err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	js, err := json.Marshal(&parameters)
 	if err != nil {
-		s.errorHandler(w, err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
-func (s *Server) errorHandler(w http.ResponseWriter, err error) {
+func (s *Server) errorHandler(w http.ResponseWriter, err error, errorCode int) {
 	s.log.Println(err)
-	errMsg := fmt.Sprintf("Internal error: %s", err)
-	w.WriteHeader(http.StatusInternalServerError)
-	io.WriteString(w, errMsg)
+	w.WriteHeader(errorCode)
+	io.WriteString(w, err.Error())
 }
 
 func (s *Server) saveParameterHandler(w http.ResponseWriter, r *http.Request) {
 	location, err := s.param.Save(r.Body)
 	if err != nil {
-		s.errorHandler(w, err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 
