@@ -1,10 +1,9 @@
 package server_test
 
 import (
-	//	"encoding/json"
+	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -99,7 +98,7 @@ func setUp(
 	req := httptest.NewRequest(httpMethod, path, nil)
 	rr := httptest.NewRecorder()
 	s := server.NewServer(&mock{
-		location:   expecParams,
+		location:   expecLocation,
 		err:        isError,
 		parameters: expecParams,
 	})
@@ -114,7 +113,7 @@ func setUp(
 // TODO test invalid http method
 
 func TestListParameterError(t *testing.T) {
-	f := setUp(t, "GET", "/garden/v1/parameter/list", true, ParamJson{})
+	f := setUp(t, "GET", "/garden/v1/parameter/list", true, ParamJson{}, "")
 
 	if status := f.rr.Code; status != http.StatusInternalServerError {
 		t.Errorf("handler returned wrong status code: got %v want %v",
@@ -123,26 +122,24 @@ func TestListParameterError(t *testing.T) {
 }
 
 func TestListParameterSuccess(t *testing.T) {
-	expectedParameters := ParamJson{Name: "ok"}
-	t.Error(expectedParameters)
-	f := setUp(t, "GET", "/garden/v1/parameter/list", false, expectedParameters)
+	expectedParam := ParamJson{Name: "ok"}
+	f := setUp(t, "GET", "/garden/v1/parameter/list", false, expectedParam, "")
 
 	if status := f.rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
 	resp := f.rr.Result()
-	body, _ := ioutil.ReadAll(resp.Body)
-	t.Error(resp.Header.Get("Content-Type"))
+	expectedContentType := "application/json"
+	receivedContentType := resp.Header.Get("Content-Type")
+	if expectedContentType != receivedContentType {
+		t.Error("server response wrong content type, expected = %s, received = %s",
+			expectedContentType, receivedContentType)
+	}
 	receivedParam := ParamJson{}
 	json.NewDecoder(resp.Body).Decode(&receivedParam)
-	//t.Error(receivedParam)
-	//err := json.Unmarshal(body, &p)
-	//if err != nil {
-	//		t.Error(err)
-	//	}
-	//	t.Error(p)
-	//if expectedParameters.Test != receivedParam.Test {
-	//	t.Errorf("List don't return expected body")
-	//}
+	if expectedParam.Name != receivedParam.Name {
+		t.Errorf("List don't return expected body, expected = %s, received = %s",
+			expectedContentType, receivedContentType)
+	}
 }

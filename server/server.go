@@ -31,21 +31,20 @@ type Server struct {
 func (s *Server) listParametersHandler(w http.ResponseWriter, r *http.Request) {
 	parameters, err := s.param.List()
 	if err != nil {
-		errorHandler(w, err)
+		s.errorHandler(w, err)
 		return
 	}
 	js, err := json.Marshal(&parameters)
-	s.log.Println(parameters)
 	if err != nil {
-		errorHandler(w, err)
+		s.errorHandler(w, err)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
 
-func errorHandler(w http.ResponseWriter, err error) {
+func (s *Server) errorHandler(w http.ResponseWriter, err error) {
+	s.log.Println(err)
 	errMsg := fmt.Sprintf("Internal error: %s", err)
 	w.WriteHeader(http.StatusInternalServerError)
 	io.WriteString(w, errMsg)
@@ -54,7 +53,7 @@ func errorHandler(w http.ResponseWriter, err error) {
 func (s *Server) saveParameterHandler(w http.ResponseWriter, r *http.Request) {
 	location, err := s.param.Save(r.Body)
 	if err != nil {
-		errorHandler(w, err)
+		s.errorHandler(w, err)
 		return
 	}
 
