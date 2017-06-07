@@ -35,52 +35,6 @@ func (m *mock) List() (interface{}, error) {
 	return m.parameters, nil
 }
 
-func TestSaveParameterSuccess(t *testing.T) {
-	req, err := http.NewRequest("POST", "/garden/v1/parameter/save", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rr := httptest.NewRecorder()
-	expectedLocation := "stored"
-	s := server.NewServer(&mock{
-		location: expectedLocation,
-	})
-	s.ServeMux.ServeHTTP(rr, req)
-
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusCreated {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusCreated)
-	}
-	resp := rr.Result()
-	location := resp.Header.Get("Location")
-	if location != expectedLocation {
-		t.Error("server don't return expected location")
-	}
-}
-
-func TestSaveParameterError(t *testing.T) {
-	req, err := http.NewRequest("POST", "/garden/v1/parameter/save", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	rr := httptest.NewRecorder()
-	expectedLocation := "stored"
-	s := server.NewServer(&mock{
-		location: expectedLocation,
-		err:      true,
-	})
-	s.ServeMux.ServeHTTP(rr, req)
-
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusInternalServerError)
-	}
-}
-
 type fixture struct {
 	req *http.Request
 	rr  *httptest.ResponseRecorder
@@ -107,6 +61,30 @@ func setUp(
 		req: req,
 		rr:  rr,
 		s:   s,
+	}
+}
+
+func TestSaveParameterSuccess(t *testing.T) {
+	expectedLocation := "stored"
+	f := setUp(t, "POST", "/garden/v1/parameter/save", false, ParamJson{}, expectedLocation)
+
+	if status := f.rr.Code; status != http.StatusCreated {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusCreated)
+	}
+	resp := f.rr.Result()
+	location := resp.Header.Get("Location")
+	if location != expectedLocation {
+		t.Error("server don't return expected location")
+	}
+}
+
+func TestSaveParameterError(t *testing.T) {
+	f := setUp(t, "POST", "/garden/v1/parameter/save", true, ParamJson{}, "")
+
+	if status := f.rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusInternalServerError)
 	}
 }
 

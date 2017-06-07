@@ -29,6 +29,9 @@ type Server struct {
 // TODO check http method
 
 func (s *Server) listParametersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+	}
+
 	parameters, err := s.param.List()
 	if err != nil {
 		s.errorHandler(w, err)
