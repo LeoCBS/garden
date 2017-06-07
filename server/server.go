@@ -67,8 +67,8 @@ func (s *Server) saveParameterHandler(w http.ResponseWriter, r *http.Request) {
 
 func NewServer(p Parameter) *Server {
 	sm := http.NewServeMux()
-	info := log.New(os.Stdout,
-		"INFO: ",
+	info := log.New(os.Stderr,
+		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
 	s := &Server{
