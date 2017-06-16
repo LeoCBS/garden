@@ -65,6 +65,7 @@ func setUp(
 }
 
 //TODO test body content
+//TODO test invalid http method
 func TestSaveParameterSuccess(t *testing.T) {
 	expectedLocation := "stored"
 	f := setUp(t, "POST", "/garden/v1/parameter/save", false, ParamJson{}, expectedLocation)
@@ -88,8 +89,6 @@ func TestSaveParameterError(t *testing.T) {
 			status, http.StatusInternalServerError)
 	}
 }
-
-// TODO test invalid http method
 
 func TestListParametersError(t *testing.T) {
 	f := setUp(t, "GET", "/garden/v1/parameter/list", true, ParamJson{}, "")
