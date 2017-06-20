@@ -13,7 +13,7 @@ func (s *storage) Store(data interface{}) error {
 }
 
 func (s *storage) Load() (interface{}, error) {
-	var results interface{}
+	var results []interface{}
 	err := s.c.Find(nil).All(&results)
 	return results, err
 }
