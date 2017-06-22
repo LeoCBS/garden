@@ -9,6 +9,7 @@ import (
 
 type Storer interface {
 	Store(interface{}) error
+	Load() (interface{}, error)
 }
 
 type Parameter struct {
@@ -39,8 +40,12 @@ func (param *Parameter) Save(body io.ReadCloser) (string, error) {
 	return "", err
 }
 
-func (param *Parameter) List() ([]byte, error) {
-	return nil, nil
+func (param *Parameter) List() (interface{}, error) {
+	results, err := param.s.Load()
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 func validateParameterFields(param ParameterJson) error {

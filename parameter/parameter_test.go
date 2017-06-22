@@ -35,17 +35,31 @@ func (rc *readCloser) Close() error {
 }
 
 type storerMock struct {
-	isError bool
+	isStoreError bool
+	isLoadError  bool
+	expecParams  interface{}
 }
 
 func (m *storerMock) Store(interface{}) error {
-	if m.isError {
+	if m.isStoreError {
 		return errors.New("Store exploded")
 	}
 	return nil
 }
 
-func setUp(isReadError bool, isStoreError bool) *fixture {
+func (m *storerMock) Load() (interface{}, error) {
+	if m.isLoadError {
+		return nil, errors.New("Load exploded!!")
+	}
+	return m.expecParams, nil
+}
+
+func setUp(
+	isReadError bool,
+	isStoreError bool,
+	isLoadError bool,
+	expecParams interface{},
+) *fixture {
 	validJson := `{"name": "humidity", "value":1.0, "measure":"percent"}`
 	rc := &readCloser{
 		isClosed:    false,
@@ -53,7 +67,9 @@ func setUp(isReadError bool, isStoreError bool) *fixture {
 		reader:      strings.NewReader(validJson),
 	}
 	param := parameter.NewParameter(&storerMock{
-		isError: isStoreError,
+		isStoreError: isStoreError,
+		isLoadError:  isLoadError,
+		expecParams:  expecParams,
 	})
 	return &fixture{
 		rc:    rc,
@@ -80,7 +96,8 @@ func TestParameterFieldsInvalids(t *testing.T) {
 func TestNewParameterFieldValid(t *testing.T) {
 	isReadError := false
 	isStoreError := false
-	f := setUp(isReadError, isStoreError)
+	isLoadError := false
+	f := setUp(isReadError, isStoreError, isLoadError, nil)
 	_, err := f.param.Save(f.rc)
 	if err != nil {
 		t.Error("Store return error with valid ReadCloser")
@@ -90,7 +107,8 @@ func TestNewParameterFieldValid(t *testing.T) {
 func TestShouldCatchReadError(t *testing.T) {
 	isReadError := true
 	isStoreError := false
-	f := setUp(isReadError, isStoreError)
+	isLoadError := false
+	f := setUp(isReadError, isStoreError, isLoadError, nil)
 	_, err := f.param.Save(f.rc)
 	if err == nil {
 		t.Error("Read don't return error as expected")
@@ -100,7 +118,8 @@ func TestShouldCatchReadError(t *testing.T) {
 func TestShouldReadCloseWithSuccess(t *testing.T) {
 	isReadError := false
 	isStoreError := false
-	f := setUp(isReadError, isStoreError)
+	isLoadError := false
+	f := setUp(isReadError, isStoreError, isLoadError, nil)
 	_, err := f.param.Save(f.rc)
 	if err != nil {
 		t.Error("Store return error with valid ReadCloser")
@@ -113,7 +132,8 @@ func TestShouldReadCloseWithSuccess(t *testing.T) {
 func TestShouldGetErrorOnStore(t *testing.T) {
 	isReadError := false
 	isStoreError := true
-	f := setUp(isReadError, isStoreError)
+	isLoadError := false
+	f := setUp(isReadError, isStoreError, isLoadError, nil)
 	_, err := f.param.Save(f.rc)
 	if err == nil {
 		t.Error("Store() don't return error as expected")
@@ -123,12 +143,40 @@ func TestShouldGetErrorOnStore(t *testing.T) {
 func TestShouldReadCloseAndStoreWithSuccess(t *testing.T) {
 	isReadError := false
 	isStoreError := false
-	f := setUp(isReadError, isStoreError)
+	isLoadError := false
+	f := setUp(isReadError, isStoreError, isLoadError, nil)
 	_, err := f.param.Save(f.rc)
 	if !f.rc.isClosed {
 		t.Error("Store don't call Close func, possible leak memory")
 	}
 	if err != nil {
 		t.Error("Store() don't return error as expected")
+	}
+}
+
+func TestShouldGetErrorOnLoad(t *testing.T) {
+	isReadError := false
+	isStoreError := false
+	isLoadError := true
+	f := setUp(isReadError, isStoreError, isLoadError, nil)
+	_, err := f.param.List()
+	if err == nil {
+		t.Error("Load() don't return error as expected")
+	}
+}
+
+func TestShouldListWithSuccess(t *testing.T) {
+	isReadError := false
+	isStoreError := false
+	isLoadError := false
+	expecParams := `[{"name": "humidity", "value":1.0, "measure":"percent"},
+			{"name": "humidity", "value":1.0, "measure":"percent"}]`
+	f := setUp(isReadError, isStoreError, isLoadError, expecParams)
+	params, err := f.param.List()
+	if err != nil {
+		t.Error("Load() don't return error as expected")
+	}
+	if params != expecParams {
+		t.Error("Load() don't return expected value")
 	}
 }

@@ -1,9 +1,12 @@
 package server
 
 import (
-	"fmt"
+	"encoding/json"
+	"errors"
 	"io"
+	"log"
 	"net/http"
+	"os"
 )
 
 const (
@@ -14,37 +17,48 @@ const (
 
 type Parameter interface {
 	Save(io.ReadCloser) (string, error)
-	List() ([]byte, error)
+	List() (interface{}, error)
 }
 
 type Server struct {
 	ServeMux *http.ServeMux
 	param    Parameter
+	log      *log.Logger
 }
 
 // TODO check http method
 
 func (s *Server) listParametersHandler(w http.ResponseWriter, r *http.Request) {
-	parameters, err := s.param.List()
-	if err != nil {
-		errorHandler(w, err)
+	if r.Method != "GET" {
+		err := errors.New(http.StatusText(http.StatusMethodNotAllowed))
+		s.errorHandler(w, err, http.StatusMethodNotAllowed)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(parameters)
+	parameters, err := s.param.List()
+	if err != nil {
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	js, err := json.Marshal(&parameters)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
-func errorHandler(w http.ResponseWriter, err error) {
-	errMsg := fmt.Sprintf("Internal error: %s", err)
-	w.WriteHeader(http.StatusInternalServerError)
-	io.WriteString(w, errMsg)
+func (s *Server) errorHandler(w http.ResponseWriter, err error, errorCode int) {
+	s.log.Println(err)
+	w.WriteHeader(errorCode)
+	io.WriteString(w, err.Error())
 }
 
 func (s *Server) saveParameterHandler(w http.ResponseWriter, r *http.Request) {
 	location, err := s.param.Save(r.Body)
 	if err != nil {
-		errorHandler(w, err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -55,9 +69,14 @@ func (s *Server) saveParameterHandler(w http.ResponseWriter, r *http.Request) {
 
 func NewServer(p Parameter) *Server {
 	sm := http.NewServeMux()
+	info := log.New(os.Stderr,
+		"ERROR: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
 	s := &Server{
 		ServeMux: sm,
 		param:    p,
+		log:      info,
 	}
 	sm.HandleFunc(v1+saveParameterPath, s.saveParameterHandler)
 	sm.HandleFunc(v1+listParametersPath, s.listParametersHandler)

@@ -12,6 +12,12 @@ func (s *storage) Store(data interface{}) error {
 	return s.c.Insert(data)
 }
 
+func (s *storage) Load() (interface{}, error) {
+	var results []interface{}
+	err := s.c.Find(nil).All(&results)
+	return results, err
+}
+
 func NewStorage(
 	addr string,
 	database string,
